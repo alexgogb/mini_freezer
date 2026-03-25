@@ -1,5 +1,8 @@
 /*
  * author: Alejandro González Blanco (alexgogb)
+ *
+ * Currently this library only supports 4-bit mode and the specific
+ * features that are implemented here.
  */
 
 #include <stdint.h>
