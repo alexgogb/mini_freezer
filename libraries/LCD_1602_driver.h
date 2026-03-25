@@ -14,4 +14,4 @@ typedef struct {
     uint8_t E_pin;
 } LCD_1602;
 
-void LCD_init(LCD_1602 lcd);
+void LCD_init(LCD_1602 *lcd, uint8_t mode, uint8_t rs_pin, uint8_t rw_pin, uint8_t e_pin);
