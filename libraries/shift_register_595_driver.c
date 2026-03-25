@@ -1,3 +1,7 @@
+/*
+ * author: Alejandro González Blanco (alexgogb)
+ */
+
 #include "Shift_Register_595_Driver.h"
 
 void sr_init(sr_595 *reg, int8_t ser_pin, int8_t oe_pin, 
