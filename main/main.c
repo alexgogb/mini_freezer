@@ -20,11 +20,10 @@ void app_main(void) {
     sr_init(&shift_register, SER, GPIO_NUM_NC, RCLK, SRCLK, GPIO_NUM_NC);
     LCD_init(&lcd, MODE_4_BIT, &shift_register);
 
-    LCD_write_command(lcd, 0x62);
-    LCD_write_command(lcd, 0x12);
-
-    LCD_write_command(lcd, 0x62);
-    LCD_write_command(lcd, 0x12);
+    LCD_write_character(lcd, 'h');
+    LCD_write_character(lcd, 'o');
+    LCD_write_character(lcd, 'l');
+    LCD_write_character(lcd, 'a');
     
     while (1);
 }

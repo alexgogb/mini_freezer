@@ -48,6 +48,17 @@ void LCD_init(LCD_1602 *lcd, uint8_t mode, sr_595 *reg) {
 
 void LCD_write_command(LCD_1602 lcd, uint8_t command) {
     sr_write(*lcd.shift_register, command | 0x8); // Enable
-    sr_write(*lcd.shift_register, command & 0xF7);
+    sr_write(*lcd.shift_register, command & 0xF7); // Disable
+    vTaskDelay(pdMS_TO_TICKS(1));
+}
+
+void LCD_write_character(LCD_1602 lcd, uint8_t character) {
+    uint8_t upper_char = character & 0xF0;
+    uint8_t lower_char = character << 4;
+
+    sr_write(*lcd.shift_register, upper_char | 0xA); // Enable
+    sr_write(*lcd.shift_register, upper_char & 0xF5); // Disable
+    sr_write(*lcd.shift_register, lower_char | 0xA);
+    sr_write(*lcd.shift_register, lower_char & 0xF5);
     vTaskDelay(pdMS_TO_TICKS(1));
 }
