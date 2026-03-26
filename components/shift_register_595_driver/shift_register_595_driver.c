@@ -2,7 +2,8 @@
  * author: Alejandro González Blanco (alexgogb)
  */
 
-#include "Shift_Register_595_Driver.h"
+#include "driver/gpio.h"
+#include "include/shift_register_595_driver.h"
 
 void sr_init(sr_595 *reg, int8_t ser_pin, int8_t oe_pin, 
              int8_t rclk_pin, int8_t srclk_pin, int8_t srclr_pin) {
@@ -26,6 +27,6 @@ void sr_write(sr_595 reg, int8_t value) {
         gpio_set_level(reg.SRCLK_pin, 0);
     }
     
-    gpio_set_level(reg.OE_pin, 0);
-    gpio_set_level(reg.OE_pin, 1);
+    gpio_set_level(reg.RCLK_pin, 1);
+    gpio_set_level(reg.RCLK_pin, 0);
 }

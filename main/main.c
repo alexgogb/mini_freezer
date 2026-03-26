@@ -2,11 +2,11 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/gpio.h"
-#include "../components/shift_register_595_driver.h"
-#include "../components/LCD_1602_driver.h"
+#include "../components/LCD_1602_driver/include/LCD_1602_driver.h"
+#include "../components/shift_register_595_driver/include/shift_register_595_driver.h"
 
 #define SER 4
-#define OE 5
+#define RCLK 5
 #define SRCLK 6
 
 void initial_config();
@@ -17,8 +17,14 @@ void app_main(void) {
 
     initial_config();
 
-    sr_init(&shift_register, SER, OE, GPIO_NUM_NC, SRCLK, GPIO_NUM_NC);
+    sr_init(&shift_register, SER, GPIO_NUM_NC, RCLK, SRCLK, GPIO_NUM_NC);
     LCD_init(&lcd, MODE_4_BIT, &shift_register);
+
+    LCD_write_command(lcd, 0x62);
+    LCD_write_command(lcd, 0x12);
+
+    LCD_write_command(lcd, 0x62);
+    LCD_write_command(lcd, 0x12);
     
     while (1);
 }

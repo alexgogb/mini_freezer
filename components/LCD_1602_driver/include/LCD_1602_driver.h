@@ -10,7 +10,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "../shift_register/shift_register_595_driver.h"
+#include "../../shift_register_595_driver/include/shift_register_595_driver.h"
 
 #define MODE_4_BIT 4
 #define MODE_8_BIT 8
