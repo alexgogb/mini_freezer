@@ -62,3 +62,10 @@ void LCD_write_character(LCD_1602 lcd, uint8_t character) {
     sr_write(*lcd.shift_register, lower_char & 0xF5);
     vTaskDelay(pdMS_TO_TICKS(1));
 }
+
+void LCD_write_line(LCD_1602 lcd, char *string) {
+    while (*string) {
+        LCD_write_character(lcd, *string);
+        ++string;;
+    }
+}
