@@ -14,41 +14,47 @@ void LCD_init(LCD_1602 *lcd, uint8_t mode, sr_595 *reg) {
     vTaskDelay(pdMS_TO_TICKS(100));
 
     // First 0x30
-    LCD_write_command(*lcd, 0x30);
+    LCD_write_command_nibble(*lcd, 0x30);
     vTaskDelay(pdMS_TO_TICKS(5));
     // Second 0x30
-    LCD_write_command(*lcd, 0x30);
+    LCD_write_command_nibble(*lcd, 0x30);
     // Third 0x30
-    LCD_write_command(*lcd, 0x30);
+    LCD_write_command_nibble(*lcd, 0x30);
 
     // 0x20 to set to 4-bit mode
-    LCD_write_command(*lcd, 0x20);
+    LCD_write_command_nibble(*lcd, 0x20);
 
     // 0x28 to set 4-bit/2-line
-    LCD_write_command(*lcd, 0x20);
-    LCD_write_command(*lcd, 0x80);
+    LCD_write_command(*lcd, 0x28);
 
     // 0x08 to turn display and cursor OFF
-    LCD_write_command(*lcd, 0x00);
-    LCD_write_command(*lcd, 0x80);
+    LCD_write_command(*lcd, 0x08);
 
     // 0x01 to clear display
-    LCD_write_command(*lcd, 0x00);
-    LCD_write_command(*lcd, 0x10);
-    vTaskDelay(pdMS_TO_TICKS(3));
+    LCD_clear(*lcd);
 
     // 0x06 to entry mode set
-    LCD_write_command(*lcd, 0x00);
-    LCD_write_command(*lcd, 0x60);
+    LCD_write_command(*lcd, 0x06);
 
     // 0x0F to turn display ON
-    LCD_write_command(*lcd, 0x00);
-    LCD_write_command(*lcd, 0xF0);
+    LCD_write_command(*lcd, 0x0F);
 }
 
 void LCD_write_command(LCD_1602 lcd, uint8_t command) {
-    sr_write(*lcd.shift_register, command | 0x8); // Enable
-    sr_write(*lcd.shift_register, command & 0xF7); // Disable
+    uint8_t upper_command = command & 0xF0;
+    uint8_t lower_command = command << 4;
+
+    sr_write(*lcd.shift_register, upper_command | 0x8); // Enable
+    sr_write(*lcd.shift_register, upper_command & 0xF7); // Disable 
+    sr_write(*lcd.shift_register, lower_command | 0x8);
+    sr_write(*lcd.shift_register, lower_command & 0xF7);
+
+    vTaskDelay(pdMS_TO_TICKS(1));
+}
+
+void LCD_write_command_nibble(LCD_1602 lcd, uint8_t nibble) {
+    sr_write(*lcd.shift_register, nibble | 0x8); // Enable
+    sr_write(*lcd.shift_register, nibble & 0xF7); // Disable 
     vTaskDelay(pdMS_TO_TICKS(1));
 }
 
@@ -76,7 +82,6 @@ void LCD_change_line(LCD_1602 lcd) {
 
 void LCD_clear(LCD_1602 lcd) {
     // 0x01 to clear display
-    LCD_write_command(lcd, 0x00);
-    LCD_write_command(lcd, 0x10);
+    LCD_write_command(lcd, 0x01);
     vTaskDelay(pdMS_TO_TICKS(3));
 }

@@ -24,6 +24,7 @@ typedef struct {
 
 void LCD_init(LCD_1602 *lcd, uint8_t mode, sr_595 *reg);
 void LCD_write_command(LCD_1602 lcd, uint8_t command);
+void LCD_write_command_nibble(LCD_1602 lcd, uint8_t nibble);
 void LCD_write_character(LCD_1602 lcd, uint8_t character);
 void LCD_write_line(LCD_1602 lcd, char *string);
 void LCD_change_line(LCD_1602 lcd);
