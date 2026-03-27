@@ -19,9 +19,13 @@ void app_main(void) {
 
     sr_init(&shift_register, SER, GPIO_NUM_NC, RCLK, SRCLK, GPIO_NUM_NC);
     LCD_init(&lcd, MODE_4_BIT, &shift_register);
-
-    LCD_write_line(lcd, "Hola, mundo");
     
+    LCD_write_line(lcd, "Hola");
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    LCD_clear(lcd);
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    LCD_write_line(lcd, "Adios");
+
     while (1);
 }
 

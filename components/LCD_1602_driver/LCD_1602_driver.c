@@ -56,8 +56,8 @@ void LCD_write_character(LCD_1602 lcd, uint8_t character) {
     uint8_t upper_char = character & 0xF0;
     uint8_t lower_char = character << 4;
 
-    sr_write(*lcd.shift_register, upper_char | 0xA); // Enable
-    sr_write(*lcd.shift_register, upper_char & 0xF5); // Disable
+    sr_write(*lcd.shift_register, upper_char | 0xA); // Enable + RS
+    sr_write(*lcd.shift_register, upper_char & 0xF5); // Disable 
     sr_write(*lcd.shift_register, lower_char | 0xA);
     sr_write(*lcd.shift_register, lower_char & 0xF5);
     vTaskDelay(pdMS_TO_TICKS(1));
@@ -68,4 +68,15 @@ void LCD_write_line(LCD_1602 lcd, char *string) {
         LCD_write_character(lcd, *string);
         ++string;;
     }
+}
+
+void LCD_change_line(LCD_1602 lcd) {
+
+}
+
+void LCD_clear(LCD_1602 lcd) {
+    // 0x01 to clear display
+    LCD_write_command(lcd, 0x00);
+    LCD_write_command(lcd, 0x10);
+    vTaskDelay(pdMS_TO_TICKS(3));
 }
