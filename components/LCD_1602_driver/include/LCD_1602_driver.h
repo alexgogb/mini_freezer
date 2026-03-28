@@ -15,6 +15,8 @@
 #define MODE_4_BIT 4
 #define MODE_8_BIT 8
 
+// TO DO: add struct with row and column information to LCD_1602.
+
 typedef struct {
     uint8_t mode;
     uint8_t line;
