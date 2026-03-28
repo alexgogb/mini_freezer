@@ -73,8 +73,12 @@ void LCD_write_line(LCD_1602 lcd, char *string) {
     }
 }
 
-void LCD_switch_to_second_line(LCD_1602 lcd) {
-    LCD_write_command(lcd, 0xC0);
+void LCD_switch_to_first_line(LCD_1602 lcd, uint8_t column) {
+    LCD_write_command(lcd, 0x80 + column);
+}
+
+void LCD_switch_to_second_line(LCD_1602 lcd, uint8_t column) {
+    LCD_write_command(lcd, 0xC0 + column);
 }
 
 void LCD_clear(LCD_1602 lcd) {
