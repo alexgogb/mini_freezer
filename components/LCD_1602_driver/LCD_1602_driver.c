@@ -27,17 +27,14 @@ void LCD_init(LCD_1602 *lcd, uint8_t mode, sr_595 *reg) {
     // 0x28 to set 4-bit/2-line
     LCD_write_command(*lcd, 0x28);
 
-    // 0x08 to turn display and cursor OFF
-    LCD_write_command(*lcd, 0x08);
+    LCD_turn_display_off(*lcd);
 
-    // 0x01 to clear display
     LCD_clear(*lcd);
 
     // 0x06 to entry mode set
     LCD_write_command(*lcd, 0x06);
 
-    // 0x0F to turn display ON
-    LCD_write_command(*lcd, 0x0F);
+    LCD_cursor_on_blink_on(*lcd);
 }
 
 void LCD_write_command(LCD_1602 lcd, uint8_t command) {
@@ -77,11 +74,25 @@ void LCD_write_line(LCD_1602 lcd, char *string) {
 }
 
 void LCD_change_line(LCD_1602 lcd) {
-
+    LCD_write_command(lcd, 0xC0);
 }
 
 void LCD_clear(LCD_1602 lcd) {
     // 0x01 to clear display
     LCD_write_command(lcd, 0x01);
     vTaskDelay(pdMS_TO_TICKS(3));
+}
+
+void LCD_turn_display_off(LCD_1602 lcd) {
+    // 0x08 to turn display and cursor OFF
+    LCD_write_command(lcd, 0x08);
+}
+
+void LCD_cursor_on_blink_on(LCD_1602 lcd) {
+    // 0x0F to turn display ON
+    LCD_write_command(lcd, 0x0F);
+}
+
+void LCD_cursor_off_blink_off(LCD_1602 lcd) {
+    LCD_write_command(lcd, 0x0C);
 }

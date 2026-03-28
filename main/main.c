@@ -26,6 +26,10 @@ void app_main(void) {
     vTaskDelay(pdMS_TO_TICKS(5000));
     LCD_write_line(lcd, "Adios");
 
+    LCD_change_line(lcd);
+    LCD_write_line(lcd, "Segunda linea");
+    LCD_cursor_off_blink_off(lcd);
+
     while (1);
 }
 
