@@ -20,19 +20,18 @@ void app_main(void) {
     LCD_1602 lcd;
 
     initial_config();
-
     sr_init(&shift_register, SER, GPIO_NUM_NC, RCLK, SRCLK, GPIO_NUM_NC);
     LCD_init(&lcd, MODE_4_BIT, &shift_register);
     
-    LCD_write_line(lcd, "Hola");
-    vTaskDelay(pdMS_TO_TICKS(5000));
-    LCD_clear(lcd);
-    vTaskDelay(pdMS_TO_TICKS(5000));
-    LCD_write_line(lcd, "Adios");
+    // LCD_write_line(lcd, "Hola");
+    // vTaskDelay(pdMS_TO_TICKS(5000));
+    // LCD_clear(lcd);
+    // vTaskDelay(pdMS_TO_TICKS(5000));
+    // LCD_write_line(lcd, "Adios");
 
-    LCD_switch_to_second_line(lcd, 0);
-    LCD_write_line(lcd, "Segunda linea");
-    LCD_cursor_off_blink_off(lcd);
+    // LCD_switch_to_second_line(lcd, 0);
+    // LCD_write_line(lcd, "Segunda linea");
+    // LCD_cursor_off_blink_off(lcd);
 
     while (1);
 }

@@ -20,7 +20,6 @@
 typedef struct {
     uint8_t mode;
     uint8_t line;
-
     sr_595 *shift_register;
 } LCD_1602;
 
