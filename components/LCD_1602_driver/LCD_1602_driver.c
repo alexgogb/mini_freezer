@@ -73,7 +73,7 @@ void LCD_write_line(LCD_1602 lcd, char *string) {
     }
 }
 
-void LCD_change_to_second_line(LCD_1602 lcd) {
+void LCD_switch_to_second_line(LCD_1602 lcd) {
     LCD_write_command(lcd, 0xC0);
 }
 
