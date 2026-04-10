@@ -1,6 +1,9 @@
 /*
  * author: Alejandro González Blanco (alexgogb)
  *
+ * This library is not finished. Frequency, duty resolution... can be added as well.
+ * Right now, those functionalities are hardcoded for this project.
+ * 
  */
 
 #pragma once
