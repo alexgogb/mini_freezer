@@ -19,20 +19,16 @@ void audio_device_send_pulse(audio_device ad, int32_t duration_ms) {
 }
 
 void audio_device_warning(audio_device ad) {
-    while (1) {
-        for (int duty = 0; duty <= 1023; duty += 10) {
-            ledc_set_duty(ad.ledc_mode, ad.ledc_channel, duty);
-            ledc_update_duty(ad.ledc_mode, ad.ledc_channel);
-            // vTaskDelay(20 / portTICK_PERIOD_MS);
-            vTaskDelay(pdMS_TO_TICKS(10));
-        }
+    for (int duty = 0; duty <= 1023; duty += 10) {
+        ledc_set_duty(ad.ledc_mode, ad.ledc_channel, duty);
+        ledc_update_duty(ad.ledc_mode, ad.ledc_channel);
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
 
-        for (int duty = 1023; duty >= 0; duty -= 10) {
-            ledc_set_duty(ad.ledc_mode, ad.ledc_channel, duty);
-            ledc_update_duty(ad.ledc_mode, ad.ledc_channel);
-            // vTaskDelay(20 / portTICK_PERIOD_MS);
-            vTaskDelay(pdMS_TO_TICKS(10));
-        }
+    for (int duty = 1023; duty >= 0; duty -= 10) {
+        ledc_set_duty(ad.ledc_mode, ad.ledc_channel, duty);
+        ledc_update_duty(ad.ledc_mode, ad.ledc_channel);
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
