@@ -16,6 +16,7 @@
 #define RCLK 5
 #define SRCLK 6
 #define AUDIO 7
+#define DOOR_WARNING 10
 
 #define LEDC_DUTY_RESOLUTION LEDC_TIMER_10_BIT  // (0-1023)
 #define LEDC_AUDIO_CHANNEL LEDC_CHANNEL_0
@@ -66,7 +67,7 @@ void app_main(void) {
 
 void initial_config() {
     gpio_config_t io_config_out = {
-        .pin_bit_mask = (1ULL << 4) | (1ULL << 5) | (1ULL << 6) | (1ULL << 7),
+        .pin_bit_mask = (1ULL << SER) | (1ULL << RCLK) | (1ULL << SRCLK),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -75,7 +76,7 @@ void initial_config() {
     gpio_config(&io_config_out);
 
     gpio_config_t io_config_in = {
-        .pin_bit_mask = (1ULL << 10),
+        .pin_bit_mask = (1ULL << DOOR_WARNING),
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
