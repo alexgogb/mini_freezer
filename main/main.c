@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 #include "driver/ledc.h"
+#include "esp_timer.h"
 #include "hal/ledc_types.h"
 #include "../components/LCD_1602_driver/include/LCD_1602_driver.h"
 #include "../components/shift_register_595_driver/include/shift_register_595_driver.h"
@@ -25,12 +26,15 @@
 #define LEDC_FREQUENCY 1000              // 1 kHz
 
 void initial_config();
+void door_open_safety_system();
 void audioDriverTask(void *pvParameters);
 
 sr_595 shift_register;
 LCD_1602 lcd;
 audio_device ad;
+esp_timer_handle_t timer;
 volatile uint8_t warning_on = 0;
+volatile uint8_t door_warning = 0;
 
 void app_main(void) {
     initial_config();
@@ -54,13 +58,27 @@ void app_main(void) {
     // audio_device_warning(ad);
     // audio_device_send_pulse(ad, 3000);
 
-    while (1) {
-        if (gpio_get_level(10)) {
-            warning_on = 1;
-        } else {
-            warning_on = 0;
-        }
+    // while (1) {
+    //     if (gpio_get_level(10)) {
+    //         warning_on = 1;
+    //     } else {
+    //         warning_on = 0;
+    //     }
 
+    //     vTaskDelay(pdMS_TO_TICKS(10));
+    // }
+
+    esp_timer_start_once(timer, 10 * 1000 * 1000);
+
+    while (1) {
+        if (door_warning) {
+            gpio_set_level(SER, 1);
+            door_warning = 0;
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            gpio_set_level(SER, 0);
+            esp_timer_stop(timer);
+            esp_timer_start_once(timer, 5 * 1000 * 1000);
+        }
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
@@ -101,7 +119,18 @@ void initial_config() {
     };
     ledc_channel_config(&ledc_channel);
 
+    esp_timer_create_args_t timer_args = {
+        .callback = &door_open_safety_system,
+        .arg = NULL,
+        .name = "timer"
+    };
+    esp_timer_create(&timer_args, &timer);
+
     xTaskCreate(audioDriverTask, "Audio task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
+}
+
+void door_open_safety_system() {
+    door_warning++;
 }
 
 void audioDriverTask(void *pvParameters) {
