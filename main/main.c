@@ -13,12 +13,14 @@
 #include "../components/shift_register_595_driver/include/shift_register_595_driver.h"
 #include "../components/audio_module/include/audio_module.h"
 
+// GPIOs 2, 3, 4, 5, 6, 7, 10, 11, 18, 19, 20, 21, 22, 23: usable.
 #define SER 4
 #define RCLK 5
 #define SRCLK 6
 #define AUDIO 7
 #define DOOR_WARNING 10
 #define PELTIER 11
+#define FAN - 
 
 #define BUTTON_DEBOUNCE_COUNT 5
 
@@ -31,9 +33,16 @@
 #define LEDC_AUDIO_FREQUENCY 1000 // 1 kHz
 #define LEDC_PELTIER_FREQUENCY 4000
 
-void initial_config();
+void esp32_initial_config();
 void door_open_safety_system();
-void audioDriverTask(void *pvParameters);
+void button_handler_task(void *args);
+void audio_driver_task(void *args);
+
+typedef enum {
+    BUTTON_SUM,
+    BUTTON_MIN,
+    BUTTON_OK
+} button_event;
 
 sr_595 shift_register;
 LCD_1602 lcd;
@@ -44,65 +53,44 @@ volatile uint8_t door_warning = 0;
 uint8_t button_counter = 0;
 uint8_t button_last_read = 1;
 uint8_t button_state = 1;
+uint8_t peltier_mode = 0;
+portMUX_TYPE mutex_door_warning = portMUX_INITIALIZER_UNLOCKED;
+QueueHandle_t button_queue;
 
 void app_main(void) {
-    initial_config();
+    uint8_t button_current;
+    esp32_initial_config();
 
     sr_init(&shift_register, SER, GPIO_NUM_NC, RCLK, SRCLK, GPIO_NUM_NC);
     LCD_init(&lcd, MODE_4_BIT, &shift_register);
     audio_device_init(&ad, LEDC_AUDIO_CHANNEL, LEDC_MODE, AUDIO);
     
-    // LCD_write_line(lcd, "Hola");
-    // vTaskDelay(pdMS_TO_TICKS(5000));
-    // LCD_clear(lcd);
-    // vTaskDelay(pdMS_TO_TICKS(5000));
-    // LCD_write_line(lcd, "Adios");
-
-    // LCD_switch_to_second_line(lcd, 0);
-    // LCD_write_line(lcd, "Segunda linea");
-    // LCD_cursor_off_blink_off(lcd);
-
-    // while (1);
-
-    // audio_device_warning(ad);
-    // audio_device_send_pulse(ad, 3000);
-
-    // while (1) {
-    //     if (gpio_get_level(10)) {
-    //         warning_on = 1;
-    //     } else {
-    //         warning_on = 0;
-    //     }
-
-    //     vTaskDelay(pdMS_TO_TICKS(10));
-    // }
+    LCD_write_line(lcd, "Bienvenido");
+    LCD_cursor_off_blink_off(lcd);
+    vTaskDelay(pdMS_TO_TICKS(1500));
+    LCD_clear(lcd);
 
     // esp_timer_start_once(timer, 10 * 1000 * 1000);
 
-    // while (1) {
-    //     if (door_warning) {
-    //         gpio_set_level(SER, 1);
-    //         door_warning = 0;
-    //         vTaskDelay(pdMS_TO_TICKS(2000));
-    //         gpio_set_level(SER, 0);
-    //         esp_timer_stop(timer);
-    //         esp_timer_start_once(timer, 5 * 1000 * 1000);
-    //     }
-    //     vTaskDelay(pdMS_TO_TICKS(10));
+    // if (door_warning) {
+    //     gpio_set_level(SER, 1);
+    //     door_warning = 0;
+    //     vTaskDelay(pdMS_TO_TICKS(2000));
+    //     gpio_set_level(SER, 0);
+    //     esp_timer_stop(timer);
+    //     esp_timer_start_once(timer, 5 * 1000 * 1000);
     // }
-
-    uint8_t peltier_mode = 0;
-    uint8_t current;
-
+    // vTaskDelay(pdMS_TO_TICKS(10));
+    
     while (1) {
-        current = gpio_get_level(10);
+        button_current = gpio_get_level(DOOR_WARNING);
 
-        if (current == button_last_read) {
+        if (button_current == button_last_read) {
             button_counter++;
 
             if (button_counter >= BUTTON_DEBOUNCE_COUNT) {
-                if (button_state != current) {
-                    button_state = current;
+                if (button_state != button_current) {
+                    button_state = button_current;
 
                     if (button_state) {
                         if (peltier_mode < 4) {
@@ -125,12 +113,13 @@ void app_main(void) {
             button_counter = 0;
         }
 
-        button_last_read = current;
+        button_last_read = button_current;
+
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
-void initial_config() {
+void esp32_initial_config() {
     gpio_config_t io_config_out = {
         .pin_bit_mask = (1ULL << SER) | (1ULL << RCLK) | (1ULL << SRCLK),
         .mode = GPIO_MODE_OUTPUT,
@@ -190,21 +179,52 @@ void initial_config() {
     };
     esp_timer_create(&timer_args, &timer);
 
-    xTaskCreate(audioDriverTask, "Audio task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
+    button_queue = xQueueCreate(10, sizeof(button_event));
+    xTaskCreate(button_handler_task, "Button task", configMINIMAL_STACK_SIZE, NULL, 3, NULL);
+    xTaskCreate(audio_driver_task, "Audio task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
 }
 
 void door_open_safety_system() {
     door_warning++;
 }
 
-void audioDriverTask(void *pvParameters) {
+void button_handler_task(void *args) {
+    button_event event;
+
     while (1) {
-        if (warning_on) {
+        if (xQueueReceive(button_queue, &event, portMAX_DELAY)) {
+            switch (event) {
+                case BUTTON_SUM:
+                    if (peltier_mode < 4) {
+                        peltier_mode++;
+                    }
+                    break;
+                case BUTTON_MIN:
+                    if (peltier_mode > 0) {
+                        peltier_mode--;
+                    }
+                    break;
+                case BUTTON_OK:
+                    break;
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
+
+void audio_driver_task(void *args) {
+    while (1) {
+        taskENTER_CRITICAL(&mutex_door_warning);
+        uint8_t read_warning_on = warning_on;
+        taskEXIT_CRITICAL(&mutex_door_warning);
+
+        if (read_warning_on) {
             audio_device_warning(ad);
         } else {
             audio_device_turn_off(ad);
         }
-
+        
         vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
