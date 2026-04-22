@@ -76,3 +76,16 @@ Desktop.ini
 *.workspace # General workspace files, can be from various tools
 *.suo       # Visual Studio Solution User Options
 *.sln.docstates # Visual Studio
+
+# VS Code
+.vscode/
+
+# Dev Containers
+.devcontainer/
+
+# Carpeta de esquemas
+mini_freezer_schematics/
+
+/prueba.txt
+
+/.clangd
