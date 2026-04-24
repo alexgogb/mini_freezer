@@ -14,6 +14,7 @@
 #include "../components/audio_module/include/audio_module.h"
 
 // GPIOs 2, 3, 4, 5, 6, 7, 10, 11, 18, 19, 20, 21, 22, 23: usable.
+#define PIN_LIGHT 3
 #define PIN_SER 4
 #define PIN_RCLK 5
 #define PIN_SRCLK 6
@@ -48,6 +49,11 @@ typedef enum {
     BUTTON_OK
 } button_event;
 
+typedef enum {
+    AUDIO_BEEP,
+    AUDIO_WARNING
+} audio_event;
+
 sr_595 shift_register;
 LCD_1602 lcd;
 audio_device ad;
@@ -57,9 +63,9 @@ esp_timer_handle_t timer;
 volatile uint8_t warning_on = 0;
 uint8_t peltier_current_mode = 0;
 
-portMUX_TYPE mutex_door_warning = portMUX_INITIALIZER_UNLOCKED;
 QueueHandle_t button_queue;
 QueueHandle_t peltier_result_queue;
+QueueHandle_t audio_queue;
 EventGroupHandle_t button_event_group;
 TickType_t button_last_time[3] = {0, 0, 0};
 
@@ -162,6 +168,7 @@ void esp32_initial_config() {
     button_event_group = xEventGroupCreate();
     button_queue = xQueueCreate(10, sizeof(button_event));
     peltier_result_queue = xQueueCreate(1, sizeof(uint8_t));
+    audio_queue = xQueueCreate(5, sizeof(audio_event));
     xTaskCreate(button_handler_task, "Button task", 2048, NULL, 3, NULL);
     xTaskCreate(audio_driver_task, "Audio task", 2048, NULL, tskIDLE_PRIORITY, NULL);
 }
@@ -173,6 +180,7 @@ void door_open_safety_system() {
 void button_handler_task(void *args) {
     uint8_t peltier_selection_mode = 0;
     button_event event;
+    audio_event audio;
     TickType_t button_now;
 
     while (1) {
@@ -184,8 +192,10 @@ void button_handler_task(void *args) {
             }
             button_last_time[event] = button_now;
 
+            audio = AUDIO_BEEP;
+            xQueueSend(audio_queue, &audio, 0);
+
             if (!(xEventGroupGetBits(button_event_group) & BIT0)) {
-                audio_device_send_pulse(ad, 100);
                 continue;
             }
 
@@ -194,17 +204,14 @@ void button_handler_task(void *args) {
                     if (peltier_selection_mode < 4) {
                         peltier_selection_mode++;
                     }
-                    audio_device_send_pulse(ad, 100);
                     break;
                 case BUTTON_MIN:
                     if (peltier_selection_mode > 0) {
                         peltier_selection_mode--;
                     }
-                    audio_device_send_pulse(ad, 100);
                     break;
                 case BUTTON_OK:
                     xQueueSend(peltier_result_queue, &peltier_selection_mode, 0);
-                    audio_device_send_pulse(ad, 100);
                     // peltier_selection_mode = 0;
                     break;
             }
@@ -213,18 +220,21 @@ void button_handler_task(void *args) {
 }
 
 void audio_driver_task(void *args) {
-    while (1) {
-        taskENTER_CRITICAL(&mutex_door_warning);
-        uint8_t read_warning_on = warning_on;
-        taskEXIT_CRITICAL(&mutex_door_warning);
+    audio_event event;
 
-        if (read_warning_on) {
-            audio_device_warning(ad);
-        } else {
+    while (1) {
+        if (xQueueReceive(audio_queue, &event, portMAX_DELAY)) {
             audio_device_turn_off(ad);
+
+            switch (event) {
+                case AUDIO_BEEP:
+                    audio_device_send_pulse(ad, 500);
+                    break;
+                case AUDIO_WARNING:
+                    audio_device_warning(ad);
+                    break;
+            }
         }
-        
-        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
