@@ -228,7 +228,7 @@ void audio_driver_task(void *args) {
 
             switch (event) {
                 case AUDIO_BEEP:
-                    audio_device_send_pulse(ad, 500);
+                    audio_device_send_pulse(ad, 50);
                     break;
                 case AUDIO_WARNING:
                     audio_device_warning(ad);
