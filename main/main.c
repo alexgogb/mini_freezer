@@ -110,6 +110,8 @@ void app_main(void) {
     int64_t hours;
     int64_t minutes;
     int64_t seconds;
+    int64_t current_time;
+    int64_t time_left;
     uint64_t total_us;
     esp32_initial_config();
 
@@ -181,8 +183,8 @@ void app_main(void) {
 
         while (system_current_state == WORKING) {
             if (!door_open) {
-                int64_t current_time = esp_timer_get_time();
-                int64_t time_left = remaining_us - (current_time - start_time_us);
+                current_time = esp_timer_get_time();
+                time_left = remaining_us - (current_time - start_time_us);
 
                 if (time_left < 0) {
                     time_left = 0;
