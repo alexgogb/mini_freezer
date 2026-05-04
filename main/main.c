@@ -12,6 +12,7 @@
 #include "../components/LCD_1602_driver/include/LCD_1602_driver.h"
 #include "../components/shift_register_595_driver/include/shift_register_595_driver.h"
 #include "../components/audio_module/include/audio_module.h"
+#include "dht.h"
 
 // GPIOs 2, 3, 4, 5, 6, 7, 10, 11, 18, 19, 20, 21, 22, 23: usable.
 #define PIN_LIGHT 3
@@ -22,6 +23,7 @@
 #define PIN_DOOR_WARNING 10
 #define PIN_PELTIER 11
 #define PIN_FAN 18
+#define PIN_DHT 19
 #define PIN_BUTTON_SUM 21
 #define PIN_BUTTON_MIN 22
 #define PIN_BUTTON_OK 23
@@ -41,6 +43,8 @@
 #define HOURS 0
 #define MINUTES 1
 #define SECONDS 2
+
+#define DHT_TYPE DHT_TYPE_DHT11
 
 void esp32_initial_config();
 void button_handler_task(void *args);
@@ -113,6 +117,9 @@ void app_main(void) {
     int64_t current_time;
     int64_t time_left;
     uint64_t total_us;
+    int16_t temperature = 0;
+    int16_t humidity = 0;
+    char status_string[17];
     esp32_initial_config();
 
     sr_init(&shift_register, PIN_SER, GPIO_NUM_NC, PIN_RCLK, PIN_SRCLK, GPIO_NUM_NC);
@@ -203,6 +210,16 @@ void app_main(void) {
                 LCD_write_line(lcd, "Door open!");
                 // Second line shows frozen time.
             }
+
+            if (dht_read_data(DHT_TYPE, PIN_DHT, &humidity, &temperature) == ESP_OK) {
+                snprintf(status_string, sizeof(status_string), "T:%d%cC H:%d%%",
+                        temperature / 10,
+                        0xDF, // º
+                        humidity / 10);
+            } else {
+                snprintf(status_string, sizeof(status_string), "T:-- H:--      ");
+            }
+            LCD_write_line(lcd, status_string);
 
             vTaskDelay(pdMS_TO_TICKS(500));
         }
