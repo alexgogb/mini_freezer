@@ -543,7 +543,7 @@ void IRAM_ATTR door_isr(void *args) {
     }
     door_last_time = door_current_time;
 
-    if (gpio_get_level(PIN_DOOR_WARNING) == 1) {
+    if (gpio_get_level(PIN_DOOR_WARNING) == 0) {
         door_open_isr(NULL);
     } else {
         door_close_isr(NULL);
