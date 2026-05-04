@@ -47,21 +47,6 @@
 
 #define DHT_TYPE DHT_TYPE_DHT11
 
-void esp32_initial_config();
-void button_handler_task(void *args);
-void audio_driver_task(void *args);
-void door_open_timer_callback(void *args);
-void fan_timer_callback(void *args);
-void button_sum_isr(void *args);
-void button_min_isr(void *args);
-void button_ok_isr(void *args);
-void door_open_isr(void *args);
-void door_close_isr(void *args);
-void door_isr(void *args);
-void safe_shutdown();
-void write_time(char *string, time_selection_state state);
-void update_time_display(time_selection_state state);
-
 typedef enum {
     BUTTON_LEFT,
     BUTTON_RIGHT,
@@ -84,6 +69,21 @@ typedef enum {
     SELECTING_MINUTES,
     SELECTING_SECONDS
 } time_selection_state;
+
+void esp32_initial_config();
+void button_handler_task(void *args);
+void audio_driver_task(void *args);
+void door_open_timer_callback(void *args);
+void fan_timer_callback(void *args);
+void button_sum_isr(void *args);
+void button_min_isr(void *args);
+void button_ok_isr(void *args);
+void door_open_isr(void *args);
+void door_close_isr(void *args);
+void door_isr(void *args);
+void safe_shutdown();
+void write_time(char *string, time_selection_state state);
+void update_time_display(time_selection_state state);
 
 sr_595 shift_register;
 LCD_1602 lcd;
@@ -121,7 +121,7 @@ void app_main(void) {
     uint64_t total_us;
     int16_t temperature = 0;
     int16_t humidity = 0;
-    char status_string[17];
+    char status_string[20];
     esp32_initial_config();
 
     sr_init(&shift_register, PIN_SER, GPIO_NUM_NC, PIN_RCLK, PIN_SRCLK, GPIO_NUM_NC);
@@ -204,8 +204,8 @@ void app_main(void) {
                 minutes = (time_left % 3600000000LL) / 60000000LL;
                 seconds = (time_left % 60000000LL) / 1000000LL;
 
-                char time_str[9];
-                snprintf(time_str, sizeof(time_str), "%02d:%02d:%02d", hours, minutes, seconds);
+                char time_str[20];
+                snprintf(time_str, sizeof(time_str), "%02lld:%02lld:%02lld", hours, minutes, seconds);
 
                 LCD_switch_to_second_line(lcd, 0);
                 LCD_write_line(lcd, time_str);
@@ -577,7 +577,7 @@ void write_time(char *string, time_selection_state state) {
 }
 
 void update_time_display(time_selection_state state) {
-    char time_str[9]; // "HH:MM:SS\0"
+    char time_str[12]; // "HH:MM:SS\0"
     snprintf(time_str, sizeof(time_str), "%02d:%02d:%02d",
              peltier_time[HOURS],
              peltier_time[MINUTES],
