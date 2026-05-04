@@ -110,6 +110,7 @@ QueueHandle_t audio_queue;
 QueueHandle_t time_queue;
 EventGroupHandle_t button_event_group;
 TickType_t button_last_time[3] = {0, 0, 0};
+volatile TickType_t door_last_time = 0;
 
 void app_main(void) {
     int64_t hours;
@@ -535,6 +536,13 @@ void IRAM_ATTR door_close_isr(void *args) {
 }
 
 void IRAM_ATTR door_isr(void *args) {
+    TickType_t door_current_time = xTaskGetTickCountFromISR();
+
+    if ((door_current_time - door_last_time) < pdMS_TO_TICKS(50)) {
+        return;
+    }
+    door_last_time = door_current_time;
+
     if (gpio_get_level(PIN_DOOR_WARNING) == 1) {
         door_open_isr(NULL);
     } else {
