@@ -24,6 +24,7 @@
 #define PIN_PELTIER 11
 #define PIN_FAN 18
 #define PIN_DHT 19
+#define PIN_AUXILIAR_FAN 20
 #define PIN_BUTTON_SUM 21
 #define PIN_BUTTON_MIN 22
 #define PIN_BUTTON_OK 23
@@ -167,6 +168,7 @@ void app_main(void) {
 
         ledc_set_duty(LEDC_MODE, LEDC_FAN_CHANNEL, 1023);
         ledc_update_duty(LEDC_MODE, LEDC_FAN_CHANNEL);
+        gpio_set_level(PIN_AUXILIAR_FAN, 1);
 
         if (peltier_current_mode != 0) {
             ledc_set_duty(LEDC_MODE, LEDC_PELTIER_CHANNEL, 1023 / peltier_current_mode);
@@ -242,7 +244,7 @@ void app_main(void) {
 
 void esp32_initial_config() {
     gpio_config_t io_config_out = {
-        .pin_bit_mask = (1ULL << PIN_SER) | (1ULL << PIN_RCLK) | (1ULL << PIN_SRCLK) | (1ULL << PIN_LIGHT),
+        .pin_bit_mask = (1ULL << PIN_SER) | (1ULL << PIN_RCLK) | (1ULL << PIN_SRCLK) | (1ULL << PIN_LIGHT) | (1ULL << PIN_AUXILIAR_FAN),
         .mode = GPIO_MODE_OUTPUT,
         .pull_up_en = GPIO_PULLUP_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
@@ -483,6 +485,7 @@ void door_open_timer_callback(void *args) {
 void fan_timer_callback(void *args) {
     ledc_set_duty(LEDC_MODE, LEDC_FAN_CHANNEL, 0);
     ledc_update_duty(LEDC_MODE, LEDC_FAN_CHANNEL);
+    gpio_set_level(PIN_AUXILIAR_FAN, 0);
 }
 
 void IRAM_ATTR button_sum_isr(void *args) {
