@@ -259,14 +259,23 @@ void esp32_initial_config() {
     };
     gpio_config(&io_config_in);
 
-    gpio_config_t io_door = {
+    gpio_config_t io_config_dht = {
+        .pin_bit_mask = (1ULL << PIN_DHT),
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    gpio_config(&io_config_dht);
+
+    gpio_config_t io_config_door = {
         .pin_bit_mask = (1ULL << PIN_DOOR_WARNING),
         .mode = GPIO_MODE_INPUT,
         .pull_up_en = GPIO_PULLUP_ENABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .intr_type = GPIO_INTR_ANYEDGE,
     };
-    gpio_config(&io_door);
+    gpio_config(&io_config_door);
 
     ledc_timer_config_t ledc_audio_timer = {
         .speed_mode = LEDC_MODE,
